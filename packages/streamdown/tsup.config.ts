@@ -3,11 +3,10 @@ import { defineConfig } from 'tsup';
 export default defineConfig({
   dts: true,
   entry: ['index.tsx'],
-  format: ['cjs', 'esm', 'iife'],
+  format: ['iife'],
   minify: true,
   outDir: 'dist',
   sourcemap: false,
-  external: ['react', 'react-dom'],
   globalName: 'Streamdown',
   platform: 'browser',
   define: {
@@ -21,6 +20,19 @@ if (typeof process === "undefined") {
 }
 if (typeof require === "undefined") {
   var require = function(id) { 
+    if (id === 'util') {
+      return {
+        inherits: function(ctor, superCtor) {
+          ctor.super_ = superCtor;
+          ctor.prototype = Object.create(superCtor.prototype, {
+            constructor: { value: ctor, enumerable: false, writable: true, configurable: true }
+          });
+        },
+        deprecate: function(fn, msg) { return fn; },
+        format: function(f) { return f; },
+        inspect: function(obj) { return JSON.stringify(obj); }
+      };
+    }
     throw new Error("Module '" + id + "' not found in browser build"); 
   };
 }
@@ -36,5 +48,6 @@ if (typeof require === "undefined") {
       '__dirname': '""',
       '__filename': '""'
     };
-  }
+  },
+  external: []
 });

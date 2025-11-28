@@ -36,3 +36,13 @@ yarn-error.log*
 # Misc
 .DS_Store
 *.pem
+
+# Prevent accidental npm lockfiles in pnpm monorepo
+package-lock.json
+**/package-lock.json
+
+# Fumadocs
+.source
+
+# Benchmarks
+results.txt

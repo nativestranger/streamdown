@@ -1,69 +1,73 @@
-import { render, screen } from '@testing-library/react';
-import React from 'react';
-import { describe, expect, it, vi } from 'vitest';
-import { Streamdown } from '../index';
+import { render } from "@testing-library/react";
+import type { MermaidConfig } from "mermaid";
+import { describe, expect, it, vi } from "vitest";
+import { Streamdown } from "../index";
 
 // Mock the dependencies
-vi.mock('react-markdown', () => ({
-  default: ({ 
-    children, 
-    allowedImagePrefixes,
-    allowedLinkPrefixes,
-    defaultOrigin,
+vi.mock("../lib/markdown", () => ({
+  Markdown: ({
+    children,
     rehypePlugins,
     remarkPlugins,
     components,
-    ...props 
+    ...props
   }: any) => {
     // Only render if children is provided
-    if (!children) return null;
+    if (!children) {
+      return null;
+    }
     return (
       <div data-testid="markdown" {...props}>
         {children}
       </div>
     );
   },
+  defaultUrlTransform: (url: string) => url,
 }));
 
-vi.mock('harden-react-markdown', () => ({
-  default: (Component: any) => Component,
+vi.mock("rehype-katex", () => ({
+  default: () => {
+    // Mock implementation
+  },
 }));
 
-vi.mock('rehype-katex', () => ({
-  default: () => {},
+vi.mock("remark-gfm", () => ({
+  default: () => {
+    // Mock implementation
+  },
 }));
 
-vi.mock('remark-gfm', () => ({
-  default: () => {},
+vi.mock("remark-math", () => ({
+  default: () => {
+    // Mock implementation
+  },
 }));
 
-vi.mock('remark-math', () => ({
-  default: () => {},
-}));
-
-describe('Streamdown Component', () => {
-  it('should render markdown content', () => {
-    const content = '# Hello World';
+describe("Streamdown Component", () => {
+  it("should render markdown content", () => {
+    const content = "# Hello World";
     const { container } = render(<Streamdown>{content}</Streamdown>);
     const markdown = container.querySelector('[data-testid="markdown"]');
     expect(markdown).toBeTruthy();
   });
 
-  it('should parse incomplete markdown by default', () => {
-    const content = 'Text with **incomplete bold';
+  it("should parse incomplete markdown by default", () => {
+    const content = "Text with **incomplete bold";
     const { container } = render(<Streamdown>{content}</Streamdown>);
     const markdown = container.querySelector('[data-testid="markdown"]');
-    expect(markdown?.textContent).toBe('Text with **incomplete bold**');
+    expect(markdown?.textContent).toBe("Text with **incomplete bold**");
   });
 
-  it('should not parse incomplete markdown when disabled', () => {
-    const content = 'Text with **incomplete bold';
-    const { container } = render(<Streamdown parseIncompleteMarkdown={false}>{content}</Streamdown>);
+  it("should not parse incomplete markdown when disabled", () => {
+    const content = "Text with **incomplete bold";
+    const { container } = render(
+      <Streamdown parseIncompleteMarkdown={false}>{content}</Streamdown>
+    );
     const markdown = container.querySelector('[data-testid="markdown"]');
-    expect(markdown?.textContent).toBe('Text with **incomplete bold');
+    expect(markdown?.textContent).toBe("Text with **incomplete bold");
   });
 
-  it('should handle non-string children', () => {
+  it("should handle non-string children", () => {
     const content = <div>React Element</div>;
     const { container } = render(<Streamdown>{content as any}</Streamdown>);
     // Non-string children get converted to empty string, so no blocks are created
@@ -72,48 +76,7 @@ describe('Streamdown Component', () => {
     expect(wrapper?.children.length).toBe(0);
   });
 
-  it('should pass through custom props', () => {
-    const { container } = render(
-      <Streamdown className="custom-class" data-custom="value">
-        Content
-      </Streamdown>
-    );
-    const wrapper = container.firstElementChild;
-    expect(wrapper?.getAttribute('class')).toContain('custom-class');
-    expect(wrapper?.getAttribute('data-custom')).toBe('value');
-  });
-
-  it('should use default allowed prefixes when not specified', () => {
-    const { container } = render(<Streamdown>Content</Streamdown>);
-    // These props are passed to child Block components, not to the wrapper div
-    const markdown = container.querySelector('[data-testid="markdown"]');
-    expect(markdown).toBeTruthy();
-  });
-
-  it('should use custom allowed prefixes when specified', () => {
-    const { container } = render(
-      <Streamdown
-        allowedImagePrefixes={['https://', 'http://']}
-        allowedLinkPrefixes={['https://', 'mailto:']}
-      >
-        Content
-      </Streamdown>
-    );
-    // These props are passed to child Block components, not to the wrapper div
-    const markdown = container.querySelector('[data-testid="markdown"]');
-    expect(markdown).toBeTruthy();
-  });
-
-  it('should pass defaultOrigin prop', () => {
-    const { container } = render(
-      <Streamdown defaultOrigin="https://example.com">Content</Streamdown>
-    );
-    // This prop is passed to child Block components, not to the wrapper div
-    const markdown = container.querySelector('[data-testid="markdown"]');
-    expect(markdown).toBeTruthy();
-  });
-
-  it('should merge custom components with defaults', () => {
+  it("should merge custom components with defaults", () => {
     const customComponents = {
       h1: ({ children }: any) => <h1 className="custom-h1">{children}</h1>,
     };
@@ -125,21 +88,23 @@ describe('Streamdown Component', () => {
     // The markdown might not render synchronously, let's check the wrapper exists
     const wrapper = container.querySelector('[data-testid="markdown"]');
     expect(wrapper).toBeTruthy();
-    
+
     // Check if any h1 exists at all (custom or default)
-    const h1 = container.querySelector('h1');
+    const h1 = container.querySelector("h1");
     // If h1 exists, it should have the custom class
     if (h1) {
-      expect(h1.className).toContain('custom-h1');
-      expect(h1.textContent).toBe('Heading');
+      expect(h1.className).toContain("custom-h1");
+      expect(h1.textContent).toBe("Heading");
     } else {
       // The component renders but heading might be parsed differently
-      expect(wrapper?.textContent).toContain('Heading');
+      expect(wrapper?.textContent).toContain("Heading");
     }
   });
 
-  it('should merge custom rehype plugins', () => {
-    const customPlugin = () => {};
+  it("should merge custom rehype plugins", () => {
+    const customPlugin = () => {
+      // Mock plugin implementation
+    };
 
     const { container } = render(
       <Streamdown rehypePlugins={[customPlugin]}>Content</Streamdown>
@@ -149,8 +114,10 @@ describe('Streamdown Component', () => {
     expect(markdown).toBeTruthy();
   });
 
-  it('should merge custom remark plugins', () => {
-    const customPlugin = () => {};
+  it("should merge custom remark plugins", () => {
+    const customPlugin = () => {
+      // Mock plugin implementation
+    };
 
     const { container } = render(
       <Streamdown remarkPlugins={[customPlugin]}>Content</Streamdown>
@@ -160,7 +127,7 @@ describe('Streamdown Component', () => {
     expect(markdown).toBeTruthy();
   });
 
-  it('should memoize based on children prop', () => {
+  it("should memoize based on children prop", () => {
     const { rerender, container } = render(
       <Streamdown className="class1">Content</Streamdown>
     );
@@ -172,19 +139,19 @@ describe('Streamdown Component', () => {
     rerender(<Streamdown className="class2">Different Content</Streamdown>);
 
     const markdown = container.querySelector('[data-testid="markdown"]');
-    expect(markdown?.textContent).toBe('Different Content');
+    expect(markdown?.textContent).toBe("Different Content");
   });
 
-  it('should handle empty children', () => {
-    const { container } = render(<Streamdown>{''}</Streamdown>);
+  it("should handle empty children", () => {
+    const { container } = render(<Streamdown>{""}</Streamdown>);
     // Empty string results in no blocks
     const wrapper = container.firstElementChild;
     expect(wrapper).toBeTruthy();
     expect(wrapper?.children.length).toBe(0);
-    expect(wrapper?.textContent).toBe('');
+    expect(wrapper?.textContent).toBe("");
   });
 
-  it('should handle null children', () => {
+  it("should handle null children", () => {
     const { container } = render(<Streamdown>{null as any}</Streamdown>);
     // Null children get converted to empty string, so no blocks are created
     const wrapper = container.firstElementChild;
@@ -192,7 +159,7 @@ describe('Streamdown Component', () => {
     expect(wrapper?.children.length).toBe(0);
   });
 
-  it('should handle undefined children', () => {
+  it("should handle undefined children", () => {
     const { container } = render(<Streamdown>{undefined as any}</Streamdown>);
     // Undefined children get converted to empty string, so no blocks are created
     const wrapper = container.firstElementChild;
@@ -200,16 +167,16 @@ describe('Streamdown Component', () => {
     expect(wrapper?.children.length).toBe(0);
   });
 
-  it('should handle number children', () => {
+  it("should handle number children", () => {
     const { container } = render(<Streamdown>{123 as any}</Streamdown>);
     // Numbers get converted to empty string, so no blocks are created
     const wrapper = container.firstElementChild;
     expect(wrapper).toBeTruthy();
     expect(wrapper?.children.length).toBe(0);
-    expect(wrapper?.textContent).toBe('');
+    expect(wrapper?.textContent).toBe("");
   });
 
-  it('should handle complex markdown with incomplete tokens', () => {
+  it("should handle complex markdown with incomplete tokens", () => {
     const content = `
 # Heading
 This is **bold** and *italic* text.
@@ -222,9 +189,89 @@ And an incomplete [link
     expect(wrapper).toBeTruthy();
     // Check that incomplete markdown is parsed correctly
     // The content is split into blocks and rendered separately
-    const allText = wrapper?.textContent || '';
-    expect(allText).toContain('Heading');
-    expect(allText).toContain('bold');
-    expect(allText).toContain('italic');
+    const allText = wrapper?.textContent || "";
+    expect(allText).toContain("Heading");
+    expect(allText).toContain("bold");
+    expect(allText).toContain("italic");
+  });
+
+  it("should accept mermaid config prop", () => {
+    const mermaidConfig: MermaidConfig = {
+      theme: "dark",
+      themeVariables: {
+        primaryColor: "#ff0000",
+      },
+    } as MermaidConfig;
+
+    const { container } = render(
+      <Streamdown mermaid={{ config: mermaidConfig }}>Test content</Streamdown>
+    );
+
+    // Just verify it renders without error when mermaid config is provided
+    expect(container.firstElementChild).toBeTruthy();
+  });
+
+  it("should render without mermaid config", () => {
+    const { container } = render(<Streamdown>Test content</Streamdown>);
+
+    // Just verify it renders without error when mermaid config is not provided
+    expect(container.firstElementChild).toBeTruthy();
+  });
+
+  it("should render in static mode without block parsing", () => {
+    const content = "# Hello\n\nThis is a paragraph.";
+    const { container } = render(
+      <Streamdown mode="static">{content}</Streamdown>
+    );
+
+    // In static mode, there should be only one ReactMarkdown component rendering all content
+    const markdowns = container.querySelectorAll('[data-testid="markdown"]');
+    expect(markdowns.length).toBe(1);
+    expect(markdowns[0]?.textContent).toContain("Hello");
+    expect(markdowns[0]?.textContent).toContain("This is a paragraph.");
+  });
+
+  it("should render in streaming mode with block parsing by default", () => {
+    const content = "# Hello\n\nThis is a paragraph.";
+    const { container } = render(<Streamdown>{content}</Streamdown>);
+
+    // In streaming mode, content is split into blocks
+    const markdowns = container.querySelectorAll('[data-testid="markdown"]');
+    expect(markdowns.length).toBeGreaterThan(1);
+  });
+
+  it("should render in streaming mode when explicitly set", () => {
+    const content = "# Hello\n\nThis is a paragraph.";
+    const { container } = render(
+      <Streamdown mode="streaming">{content}</Streamdown>
+    );
+
+    // In streaming mode, content is split into blocks
+    const markdowns = container.querySelectorAll('[data-testid="markdown"]');
+    expect(markdowns.length).toBeGreaterThan(1);
+  });
+
+  it("should not parse incomplete markdown in static mode", () => {
+    const content = "Text with **incomplete bold";
+    const { container } = render(
+      <Streamdown mode="static">{content}</Streamdown>
+    );
+
+    const markdown = container.querySelector('[data-testid="markdown"]');
+    // In static mode, incomplete markdown is NOT parsed/fixed
+    expect(markdown?.textContent).toBe("Text with **incomplete bold");
+  });
+
+  it("should memoize based on mode prop", () => {
+    const { rerender, container } = render(
+      <Streamdown mode="streaming">Content</Streamdown>
+    );
+
+    // Different mode - should re-render
+    rerender(<Streamdown mode="static">Content</Streamdown>);
+
+    // Verify it rendered
+    const markdown = container.querySelector('[data-testid="markdown"]');
+    expect(markdown?.textContent).toBe("Content");
   });
 });

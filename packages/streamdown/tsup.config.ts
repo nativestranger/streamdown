@@ -1,11 +1,11 @@
-import { defineConfig } from 'tsup';
+import { defineConfig } from "tsup";
 
 export default defineConfig({
   dts: true,
   entry: ['index.tsx'],
   format: ['iife'],
   minify: true,
-  outDir: 'dist',
+  outDir: "dist",
   sourcemap: false,
   globalName: 'Streamdown',
   platform: 'browser',
